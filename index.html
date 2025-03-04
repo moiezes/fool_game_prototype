@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prove You're Not a Fool - V2</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .game-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: absolute;
+            cursor: pointer;
+            transition: top 0.2s, left 0.2s;
+        }
+        h1 { color: #e63946; }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .btn:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="game-box" id="gameBox">
+        <h1 id="message">You are a fool!</h1>
+        <button id="proveBtn" class="btn">No, I am not a fool!</button>
+    </div>
+
+    <script>
+        let gameBox = document.getElementById('gameBox');
+        let btn = document.getElementById('proveBtn');
+        let moveAttempts = 0;
+        let maxAttempts = Math.floor(Math.random() * 36) + 15; // Random between 15 and 50
+        
+        function moveBox() {
+            if (moveAttempts < maxAttempts) {
+                let maxX = window.innerWidth - gameBox.clientWidth;
+                let maxY = window.innerHeight - gameBox.clientHeight;
+                
+                let newX = Math.random() * maxX;
+                let newY = Math.random() * maxY;
+                
+                gameBox.style.left = `${newX}px`;
+                gameBox.style.top = `${newY}px`;
+                moveAttempts++;
+            }
+        }
+        
+        gameBox.addEventListener('mouseover', moveBox); // For PC users
+        gameBox.addEventListener('touchstart', moveBox); // For mobile users
+        
+        btn.addEventListener('click', () => {
+            document.getElementById('message').innerText = "Fine, you win! But you're still a fool! 😆";
+            btn.innerText = "Play Again";
+            btn.onclick = () => location.reload();
+        });
+    </script>
+</body>
+</html>
