@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prove You're Not a Fool - V3</title>
+    <title>Prove You're Not a Fool - V2.1</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -19,80 +19,121 @@
         }
         .game-box {
             background: white;
-            padding: 20px;
+            padding: 40px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             position: absolute;
-            cursor: pointer;
+            text-align: center;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
             transition: top 0.2s, left 0.2s;
         }
         h1 { color: #e63946; }
-        .btn {
+        p { font-size: 14px; color: #333; margin-top: 10px; }
+        .draggable {
             background: #007bff;
             color: white;
-            padding: 10px 20px;
-            border: none;
+            padding: 20px;
             border-radius: 5px;
-            cursor: pointer;
+            cursor: grab;
             font-size: 16px;
+            position: absolute;
             transition: 0.3s;
+            user-select: none;
         }
-        .btn:hover { background: #0056b3; }
+        .draggable:active {
+            cursor: grabbing;
+        }
     </style>
 </head>
 <body>
-    <div class="game-box" id="gameBox">
+    <div class="game-box" id="targetBox">
         <h1 id="message">You are a fool!</h1>
-        <button id="proveBtn" class="btn">No, I am not a fool!</button>
+        <p>Drop the No box in me. If you are not a fool.</p>
+    </div>
+    <div id="dragBox" class="draggable" style="top: 70%; left: 50%; transform: translate(-50%, -50%);">
+        No, I am not a fool!
     </div>
 
     <script>
-        let gameBox = document.getElementById('gameBox');
-        let btn = document.getElementById('proveBtn');
+        let dragBox = document.getElementById('dragBox');
+        let targetBox = document.getElementById('targetBox');
         let moveAttempts = 0;
         let maxAttempts = Math.floor(Math.random() * 36) + 15; // Random between 15 and 50
+        let dragging = false;
 
-        function moveBox(x, y) {
-            if (moveAttempts < maxAttempts) {
-                let maxX = window.innerWidth - gameBox.clientWidth;
-                let maxY = window.innerHeight - gameBox.clientHeight;
-                
-                let newX = Math.random() * maxX;
-                let newY = Math.random() * maxY;
-                
-                gameBox.style.left = `${newX}px`;
-                gameBox.style.top = `${newY}px`;
-                moveAttempts++;
-            }
+        function getDistance(box1, box2) {
+            let rect1 = box1.getBoundingClientRect();
+            let rect2 = box2.getBoundingClientRect();
+            let dx = rect1.left - rect2.left;
+            let dy = rect1.top - rect2.top;
+            return Math.sqrt(dx * dx + dy * dy);
         }
 
-        function handleMove(event) {
-            let x, y;
-            if (event.touches) {
-                x = event.touches[0].clientX;
-                y = event.touches[0].clientY;
-            } else {
-                x = event.clientX;
-                y = event.clientY;
-            }
-            
-            let boxRect = gameBox.getBoundingClientRect();
-            let buffer = 50; // Distance threshold before moving
+        function moveTargetBox() {
+            if (moveAttempts >= maxAttempts) return;
+            let maxX = window.innerWidth - targetBox.clientWidth;
+            let maxY = window.innerHeight - targetBox.clientHeight;
+            let newX = Math.random() * maxX;
+            let newY = Math.random() * maxY;
+            targetBox.style.left = `${newX}px`;
+            targetBox.style.top = `${newY}px`;
+            moveAttempts++;
+        }
+
+        function checkDrop() {
+            let boxRect = dragBox.getBoundingClientRect();
+            let targetRect = targetBox.getBoundingClientRect();
             if (
-                x > boxRect.left - buffer && x < boxRect.right + buffer &&
-                y > boxRect.top - buffer && y < boxRect.bottom + buffer
+                boxRect.left < targetRect.right &&
+                boxRect.right > targetRect.left &&
+                boxRect.top < targetRect.bottom &&
+                boxRect.bottom > targetRect.top
             ) {
-                moveBox(x, y);
+                if (moveAttempts >= maxAttempts) {
+                    document.getElementById('message').innerText = "Fine, you win! But you're still a fool! 😆";
+                    dragBox.innerText = "Play Again";
+                    dragBox.style.cursor = "pointer";
+                    dragBox.addEventListener('click', () => location.reload());
+                } else {
+                    moveTargetBox();
+                }
             }
         }
-        
-        document.addEventListener('mousemove', handleMove); // For PC users
-        document.addEventListener('touchmove', handleMove); // For mobile users
 
-        btn.addEventListener('click', () => {
-            document.getElementById('message').innerText = "Fine, you win! But you're still a fool! 😆";
-            btn.innerText = "Play Again";
-            btn.onclick = () => location.reload();
+        dragBox.addEventListener('mousedown', (event) => { dragging = true; });
+        dragBox.addEventListener('touchstart', (event) => { dragging = true; });
+
+        document.addEventListener('mousemove', (event) => {
+            if (!dragging) return;
+            dragBox.style.left = `${event.clientX - dragBox.clientWidth / 2}px`;
+            dragBox.style.top = `${event.clientY - dragBox.clientHeight / 2}px`;
+            if (getDistance(dragBox, targetBox) < 100 && moveAttempts < maxAttempts) moveTargetBox();
+        });
+
+        document.addEventListener('touchmove', (event) => {
+            if (!dragging) return;
+            let touch = event.touches[0];
+            dragBox.style.left = `${touch.clientX - dragBox.clientWidth / 2}px`;
+            dragBox.style.top = `${touch.clientY - dragBox.clientHeight / 2}px`;
+            if (getDistance(dragBox, targetBox) < 100 && moveAttempts < maxAttempts) moveTargetBox();
+        });
+
+        document.addEventListener('mouseup', () => {
+            dragging = false;
+            checkDrop();
+        });
+        
+        document.addEventListener('touchend', () => {
+            dragging = false;
+            checkDrop();
         });
     </script>
 </body>
