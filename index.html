@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prove You're Not a Fool - V2</title>
+    <title>Prove You're Not a Fool - V3</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -51,8 +51,8 @@
         let btn = document.getElementById('proveBtn');
         let moveAttempts = 0;
         let maxAttempts = Math.floor(Math.random() * 36) + 15; // Random between 15 and 50
-        
-        function moveBox() {
+
+        function moveBox(x, y) {
             if (moveAttempts < maxAttempts) {
                 let maxX = window.innerWidth - gameBox.clientWidth;
                 let maxY = window.innerHeight - gameBox.clientHeight;
@@ -65,10 +65,30 @@
                 moveAttempts++;
             }
         }
+
+        function handleMove(event) {
+            let x, y;
+            if (event.touches) {
+                x = event.touches[0].clientX;
+                y = event.touches[0].clientY;
+            } else {
+                x = event.clientX;
+                y = event.clientY;
+            }
+            
+            let boxRect = gameBox.getBoundingClientRect();
+            let buffer = 50; // Distance threshold before moving
+            if (
+                x > boxRect.left - buffer && x < boxRect.right + buffer &&
+                y > boxRect.top - buffer && y < boxRect.bottom + buffer
+            ) {
+                moveBox(x, y);
+            }
+        }
         
-        gameBox.addEventListener('mouseover', moveBox); // For PC users
-        gameBox.addEventListener('touchstart', moveBox); // For mobile users
-        
+        document.addEventListener('mousemove', handleMove); // For PC users
+        document.addEventListener('touchmove', handleMove); // For mobile users
+
         btn.addEventListener('click', () => {
             document.getElementById('message').innerText = "Fine, you win! But you're still a fool! 😆";
             btn.innerText = "Play Again";
